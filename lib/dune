@@ -1,0 +1,6 @@
+(library
+ (name sim_scorecard)
+ (public_name sim-scorecard)
+ (libraries core async yojson exchange-core exchange-core-engine market-data)
+ (preprocess
+  (pps ppx_jane)))
