@@ -1,0 +1,14 @@
+(library
+ (name sim_scorecard_test)
+ (inline_tests
+  (flags
+   (:standard -source-tree-root .)))
+ (libraries
+  core
+  async
+  exchange-core
+  exchange-core-engine
+  market-data
+  sim-scorecard)
+ (preprocess
+  (pps ppx_jane)))
