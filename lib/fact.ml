@@ -49,9 +49,9 @@ module Metric = struct
   let to_string = function
     | Ks -> "KS"
     | Wasserstein -> "W1"
-    | Mean_abs_diff -> "mean |diff|"
-    | Abs_diff -> "|diff|"
-    | Abs_log_ratio -> "|log ratio|"
+    | Mean_abs_diff -> "mean abs diff"
+    | Abs_diff -> "abs diff"
+    | Abs_log_ratio -> "abs log ratio"
   ;;
 end
 

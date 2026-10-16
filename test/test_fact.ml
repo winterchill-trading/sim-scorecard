@@ -53,7 +53,7 @@ let garch n ~seed =
 let show facts =
   List.iter facts ~f:(fun (f : Fact.t) ->
     printf
-      "%-24s %9.3f %9.3f %-11s %7.3f %5.2f %s\n"
+      "%-24s %9.3f %9.3f %-13s %7.3f %5.2f %s\n"
       (Fact.Id.to_string f.id)
       f.sim
       f.recorded
@@ -68,18 +68,18 @@ let%expect_test "a series against itself passes everything" =
   show (Fact.compute Fact.Config.default ~sim:s ~recorded:s);
   [%expect
     {|
-    return_kurtosis              0.207     0.207 |log ratio|   0.000  0.25 pass
-    return_acf                  -0.012    -0.012 mean |diff|   0.000  0.10 pass
-    abs_return_acf              -0.004    -0.004 mean |diff|   0.000  0.10 pass
-    vol_clustering              -0.067    -0.067 |diff|        0.000  0.30 pass
-    spread_bps                   1.000     1.000 KS            0.000  0.25 pass
-    depth                     1205.041  1205.041 KS            0.000  0.30 pass
-    trade_size                  99.586    99.586 KS            0.000  0.25 pass
-    inter_trade_time          1000.000  1000.000 KS            0.000  0.25 pass
-    variance_ratio               1.058     1.058 mean |diff|   0.000  0.25 pass
-    aggressor_imbalance_acf      0.008     0.008 mean |diff|   0.000  0.10 pass
-    order_to_trade               2.171     2.171 |log ratio|   0.000  0.69 pass
-    cancel_ratio                 0.845     0.845 |diff|        0.000  0.20 pass
+    return_kurtosis              0.207     0.207 abs log ratio   0.000  0.25 pass
+    return_acf                  -0.012    -0.012 mean abs diff   0.000  0.10 pass
+    abs_return_acf              -0.004    -0.004 mean abs diff   0.000  0.10 pass
+    vol_clustering              -0.067    -0.067 abs diff        0.000  0.30 pass
+    spread_bps                   1.000     1.000 KS              0.000  0.25 pass
+    depth                     1205.041  1205.041 KS              0.000  0.30 pass
+    trade_size                  99.586    99.586 KS              0.000  0.25 pass
+    inter_trade_time          1000.000  1000.000 KS              0.000  0.25 pass
+    variance_ratio               1.058     1.058 mean abs diff   0.000  0.25 pass
+    aggressor_imbalance_acf      0.008     0.008 mean abs diff   0.000  0.10 pass
+    order_to_trade               2.171     2.171 abs log ratio   0.000  0.69 pass
+    cancel_ratio                 0.845     0.845 abs diff        0.000  0.20 pass
     |}]
 ;;
 
@@ -89,18 +89,18 @@ let%expect_test "a Gaussian walk against GARCH returns" =
   show (Fact.compute Fact.Config.default ~sim ~recorded);
   [%expect
     {|
-    return_kurtosis              0.013     2.328 |log ratio|   0.570  0.25 FAIL
-    return_acf                   0.012    -0.033 mean |diff|   0.030  0.10 pass
-    abs_return_acf              -0.004     0.223 mean |diff|   0.227  0.10 FAIL
-    vol_clustering              -0.038     0.347 |diff|        0.385  0.30 FAIL
-    spread_bps                   1.000     1.000 KS            0.020  0.25 pass
-    depth                     1228.555  1190.053 KS            0.026  0.30 pass
-    trade_size                 100.950   103.636 KS            0.026  0.25 pass
-    inter_trade_time          1000.000  1000.000 KS            0.000  0.25 pass
-    variance_ratio               0.888     1.128 mean |diff|   0.183  0.25 pass
-    aggressor_imbalance_acf     -0.005     0.003 mean |diff|   0.018  0.10 pass
-    order_to_trade               2.168     2.223 |log ratio|   0.025  0.69 pass
-    cancel_ratio                 0.846     0.846 |diff|        0.000  0.20 pass
+    return_kurtosis              0.013     2.328 abs log ratio   0.570  0.25 FAIL
+    return_acf                   0.012    -0.033 mean abs diff   0.030  0.10 pass
+    abs_return_acf              -0.004     0.223 mean abs diff   0.227  0.10 FAIL
+    vol_clustering              -0.038     0.347 abs diff        0.385  0.30 FAIL
+    spread_bps                   1.000     1.000 KS              0.020  0.25 pass
+    depth                     1228.555  1190.053 KS              0.026  0.30 pass
+    trade_size                 100.950   103.636 KS              0.026  0.25 pass
+    inter_trade_time          1000.000  1000.000 KS              0.000  0.25 pass
+    variance_ratio               0.888     1.128 mean abs diff   0.183  0.25 pass
+    aggressor_imbalance_acf     -0.005     0.003 mean abs diff   0.018  0.10 pass
+    order_to_trade               2.168     2.223 abs log ratio   0.025  0.69 pass
+    cancel_ratio                 0.846     0.846 abs diff        0.000  0.20 pass
     |}]
 ;;
 
@@ -109,18 +109,18 @@ let%expect_test "too little data is not scored" =
   show (Fact.compute Fact.Config.default ~sim:s ~recorded:s);
   [%expect
     {|
-    return_kurtosis             -0.700    -0.700 |log ratio|   0.000  0.25 n/a
-    return_acf                  -0.009    -0.009 mean |diff|   0.000  0.10 n/a
-    abs_return_acf              -0.238    -0.238 mean |diff|   0.000  0.10 n/a
-    vol_clustering                 nan       nan |diff|          nan  0.30 n/a
-    spread_bps                   1.000     1.000 KS            0.000  0.25 n/a
-    depth                     1595.500  1595.500 KS            0.000  0.30 n/a
-    trade_size                  62.455    62.455 KS            0.000  0.25 n/a
-    inter_trade_time          1000.000  1000.000 KS            0.000  0.25 n/a
-    variance_ratio                 nan       nan mean |diff|   0.000  0.25 n/a
-    aggressor_imbalance_acf     -0.100    -0.100 mean |diff|   0.000  0.10 n/a
-    order_to_trade               1.600     1.600 |log ratio|   0.000  0.69 n/a
-    cancel_ratio                 0.914     0.914 |diff|        0.000  0.20 n/a
+    return_kurtosis             -0.700    -0.700 abs log ratio   0.000  0.25 n/a
+    return_acf                  -0.009    -0.009 mean abs diff   0.000  0.10 n/a
+    abs_return_acf              -0.238    -0.238 mean abs diff   0.000  0.10 n/a
+    vol_clustering                 nan       nan abs diff          nan  0.30 n/a
+    spread_bps                   1.000     1.000 KS              0.000  0.25 n/a
+    depth                     1595.500  1595.500 KS              0.000  0.30 n/a
+    trade_size                  62.455    62.455 KS              0.000  0.25 n/a
+    inter_trade_time          1000.000  1000.000 KS              0.000  0.25 n/a
+    variance_ratio                 nan       nan mean abs diff   0.000  0.25 n/a
+    aggressor_imbalance_acf     -0.100    -0.100 mean abs diff   0.000  0.10 n/a
+    order_to_trade               1.600     1.600 abs log ratio   0.000  0.69 n/a
+    cancel_ratio                 0.914     0.914 abs diff        0.000  0.20 n/a
     |}]
 ;;
 
