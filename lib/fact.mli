@@ -58,7 +58,8 @@ module Config : sig
   [@@deriving sexp]
 
   (** 1 s grid, lags 1..10, 10-return windows, horizons 2, 5, 10, 30, 1 s imbalance
-      buckets, 10 samples minimum, default bands. *)
+      buckets, 30 samples minimum (half as many realised-variance windows), default bands.
+      Facts on the grid count the book samples behind it, not grid points. *)
   val default : t
 
   val band : t -> Id.t -> float

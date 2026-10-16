@@ -73,7 +73,7 @@ module Config = struct
     ; vol_window = 10
     ; horizons = [ 2; 5; 10; 30 ]
     ; imbalance_interval = Time_ns.Span.second
-    ; min_samples = 10
+    ; min_samples = 30
     ; bands = []
     }
   ;;
@@ -259,25 +259,31 @@ let compute (c : Config.t) ~(sim : Series.t) ~(recorded : Series.t) =
     }
   in
   let len (a, b) = Array.length a, Array.length b in
-  let distribution id (a, b) ~value =
+  (* A grid forward-fills the book, so grid facts count the book samples behind it: a
+     sparse log must not pass for a long series of (mostly zero) returns. *)
+  let n_books = Array.length sim.books, Array.length recorded.books in
+  let grid_n (a, b) =
+    Int.min (Array.length a) (fst n_books), Int.min (Array.length b) (snd n_books)
+  in
+  let distribution ?(n = len) id (a, b) ~value =
     { (fact
          id
          ~value:(value a, value b)
          ~distance:(Stats.ks a b)
-         ~n:(len (a, b))
+         ~n:(n (a, b))
          ~min:c.min_samples)
       with
       w1 = Stats.wasserstein1 a b
     }
   in
-  let curve id (a, b) ~series ~f ~min =
+  let curve ?(n = len) id (a, b) ~series ~f ~min =
     let ca = f a
     and cb = f b in
     fact
       id
       ~value:(mean_finite ca, mean_finite cb)
       ~distance:(Stats.mean_abs_diff ca cb)
-      ~n:(len series)
+      ~n:(n series)
       ~min
   in
   let acf a = Stats.acf_lags a ~max_lag:c.max_lag in
@@ -310,14 +316,22 @@ let compute (c : Config.t) ~(sim : Series.t) ~(recorded : Series.t) =
       Return_kurtosis
       ~value:(k_sim, k_rec)
       ~distance:(Float.abs (Float.log ((k_sim +. 3.) /. (k_rec +. 3.))))
-      ~n:(len (r_sim, r_rec))
+      ~n:(grid_n (r_sim, r_rec))
       ~min:c.min_samples
   ; (* Headline: lag 1; distance over every lag. *)
-    { (curve Return_acf (r_sim, r_rec) ~series:(r_sim, r_rec) ~f:acf ~min:c.min_samples) with
+    { (curve
+         ~n:grid_n
+         Return_acf
+         (r_sim, r_rec)
+         ~series:(r_sim, r_rec)
+         ~f:acf
+         ~min:c.min_samples)
+      with
       sim = lag1 r_sim
     ; recorded = lag1 r_rec
     }
   ; curve
+      ~n:grid_n
       Abs_return_acf
       (abs r_sim, abs r_rec)
       ~series:(r_sim, r_rec)
@@ -327,15 +341,18 @@ let compute (c : Config.t) ~(sim : Series.t) ~(recorded : Series.t) =
       Vol_clustering
       ~value:(lag1 rv_sim, lag1 rv_rec)
       ~distance:(Float.abs (lag1 rv_sim -. lag1 rv_rec))
-      ~n:(len (rv_sim, rv_rec))
+      ~n:
+        (let a, b = grid_n (r_sim, r_rec) in
+         a / c.vol_window, b / c.vol_window)
       ~min:(Int.max 4 (c.min_samples / 2))
-  ; distribution Spread_bps (spread g_sim, spread g_rec) ~value:Stats.median
-  ; distribution Depth (depth g_sim, depth g_rec) ~value:Stats.median
+  ; distribution ~n:grid_n Spread_bps (spread g_sim, spread g_rec) ~value:Stats.median
+  ; distribution ~n:grid_n Depth (depth g_sim, depth g_rec) ~value:Stats.median
   ; distribution Trade_size (both trade_notional) ~value:Stats.median
   ; distribution Inter_trade_time (both inter_trade_ms) ~value:Stats.median
   ; (* Headline: the middle horizon. *)
     (let horizon = List.nth_exn c.horizons (List.length c.horizons / 2) in
      { (curve
+          ~n:grid_n
           Variance_ratio
           (r_sim, r_rec)
           ~series:(r_sim, r_rec)
