@@ -9,6 +9,7 @@
   exchange-core
   exchange-core-engine
   market-data
+  yojson
   sim-scorecard)
  (preprocess
   (pps ppx_jane)))
