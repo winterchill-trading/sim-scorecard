@@ -1,0 +1,14 @@
+(executable
+ (name main)
+ (public_name sim-scorecard)
+ (package sim-scorecard)
+ (libraries
+  core
+  core_unix.command_unix
+  async
+  yojson
+  exchange-core
+  market-data
+  sim-scorecard)
+ (preprocess
+  (pps ppx_jane)))
