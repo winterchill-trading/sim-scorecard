@@ -152,9 +152,15 @@ module Builder = struct
   let set_orders t orders = t.orders <- Some orders
 
   let finish t : series =
+    (* Sources deliver by receive time; venue timestamps can be slightly out of order. *)
+    let by_ts q ~ts =
+      let a = Queue.to_array q in
+      Array.stable_sort a ~compare:(fun x y -> Int.compare (ts x) (ts y));
+      a
+    in
     { label = t.label
-    ; trades = Queue.to_array t.trades
-    ; books = Queue.to_array t.books
+    ; trades = by_ts t.trades ~ts:(fun (x : Trade.t) -> x.ts)
+    ; books = by_ts t.books ~ts:(fun (x : Book.t) -> x.ts)
     ; level_increases = t.increases
     ; level_decreases = t.decreases
     ; decreased_size = t.decreased_size

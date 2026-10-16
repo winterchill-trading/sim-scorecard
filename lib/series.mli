@@ -87,5 +87,7 @@ module Builder : sig
     -> unit
 
   val set_orders : t -> Orders.t -> unit
+
+  (** Trades and books sorted by time (stable). *)
   val finish : t -> series
 end
