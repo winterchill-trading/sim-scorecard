@@ -68,3 +68,32 @@ let load ?(depth = 10) ?label ~dir instrument ~from ~to_ () =
   in
   Series.Builder.finish b
 ;;
+
+let available_window ~dir instrument =
+  let%map days =
+    Deferred.List.concat_map
+      [ Md.Stream.Trades; Bbo; L2 ]
+      ~how:`Sequential
+      ~f:(fun stream ->
+        let any_day =
+          Md.Event_log.path ~dir instrument stream (Date.of_string "2000-01-01")
+        in
+        let stream_dir = Filename.dirname any_day in
+        match%map Monitor.try_with (fun () -> Sys.readdir stream_dir) with
+        | Error _ -> []
+        | Ok files ->
+          Array.to_list files
+          |> List.filter_map ~f:(fun f ->
+            Option.bind (String.chop_suffix f ~suffix:".bin") ~f:(fun d ->
+              Option.try_with (fun () -> Date.of_string d))))
+  in
+  match
+    List.min_elt days ~compare:Date.compare, List.max_elt days ~compare:Date.compare
+  with
+  | Some first, Some last ->
+    let start d =
+      Time_ns.of_date_ofday ~zone:Time_float.Zone.utc d Time_ns.Ofday.start_of_day
+    in
+    Some (start first, start (Date.add_days last 1))
+  | _ -> None
+;;

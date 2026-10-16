@@ -22,3 +22,10 @@ val load
 
 (** The UTC dates whose files can hold events in [\[from, to_)]. *)
 val dates : from:Time_ns.t -> to_:Time_ns.t -> Date.t list
+
+(** The window covering every day with a trades, BBO or L2 log of the instrument (start of
+    the first day to the end of the last), if there is one. *)
+val available_window
+  :  dir:string
+  -> Market_data.Instrument.t
+  -> (Time_ns.t * Time_ns.t) option Deferred.t
